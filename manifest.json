@@ -1,0 +1,15 @@
+{
+  "name": "Flora Writer Pro",
+  "short_name": "Flora WP",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#000000",
+  "icons": [
+    {
+      "src": "https://64.media.tumblr.com/5b505ab7b6f3c6a143eb067d4f63d9e1/541a989d3762e40d-4f/s500x750/a021e4f0dd0548e244c74d81bb31f43339e9dba8.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    }
+  ]
+}
