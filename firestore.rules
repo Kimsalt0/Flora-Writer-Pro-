@@ -1,0 +1,130 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Default deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Helpers
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    // NOVELS
+    match /novels/{novelId} {
+      function isValidNovel(data) {
+        return data.title is string && data.title.size() > 0 && data.title.size() <= 200
+          && data.authorId == request.auth.uid
+          && (data.get('universe', '') is string && data.get('universe', '').size() <= 10000)
+          && (data.get('notes', '') is string && data.get('notes', '').size() <= 10000);
+      }
+
+      allow get: if isSignedIn() && isOwner(existing().authorId);
+      allow list: if isSignedIn() && resource.data.authorId == request.auth.uid;
+      
+      allow create: if isSignedIn() 
+        && isValidNovel(incoming()) 
+        && isValidId(novelId)
+        && incoming().createdAt == request.time;
+
+      allow update: if isSignedIn() 
+        && isOwner(existing().authorId)
+        && isValidNovel(incoming())
+        && incoming().authorId == existing().authorId
+        && incoming().createdAt == existing().createdAt
+        && incoming().updatedAt == request.time;
+
+      allow delete: if isSignedIn() && isOwner(existing().authorId);
+
+      // SUBCOLLECTIONS
+      match /parts/{partId} {
+        function isValidPart(data) {
+          return data.title is string && data.title.size() > 0 && data.title.size() <= 200
+            && data.order is int;
+        }
+        allow read, write: if isSignedIn() && isOwner(get(/databases/$(database)/documents/novels/$(novelId)).data.authorId);
+        allow create: if isValidPart(incoming()) && isValidId(partId);
+        allow update: if isValidPart(incoming());
+      }
+
+      match /locations/{locationId} {
+        function isValidLocation(data) {
+          return data.name is string && data.name.size() > 0 && data.name.size() <= 200;
+        }
+        allow read, write: if isSignedIn() && isOwner(get(/databases/$(database)/documents/novels/$(novelId)).data.authorId);
+        allow create: if isValidLocation(incoming()) && isValidId(locationId);
+        allow update: if isValidLocation(incoming());
+      }
+
+      match /ideas/{ideaId} {
+        function isValidIdea(data) {
+          return data.content is string && data.content.size() <= 10000 
+            && (data.get('color', '') is string && data.get('color', '').size() <= 50);
+        }
+
+        allow read, write: if isSignedIn() && isOwner(get(/databases/$(database)/documents/novels/$(novelId)).data.authorId);
+        
+        allow create: if isValidIdea(incoming()) && isValidId(ideaId);
+        allow update: if isValidIdea(incoming());
+      }
+
+      match /plots/{plotId} {
+        function isValidPlot(data) {
+          return data.content is string && data.content.size() <= 5000;
+        }
+
+        allow read, write: if isSignedIn() && isOwner(get(/databases/$(database)/documents/novels/$(novelId)).data.authorId);
+        
+        allow create: if isValidPlot(incoming()) && isValidId(plotId);
+        allow update: if isValidPlot(incoming());
+      }
+
+      match /characters/{charId} {
+        function isValidChar(data) {
+          return data.name is string && data.name.size() > 0 && data.name.size() <= 100
+            && (data.get('description', '') is string && data.get('description', '').size() <= 2000)
+            && (data.get('role', 'Main') in ['Main', 'Secondary', 'Minor']);
+        }
+
+        allow read, write: if isSignedIn() && isOwner(get(/databases/$(database)/documents/novels/$(novelId)).data.authorId);
+        
+        allow create: if isValidChar(incoming()) && isValidId(charId);
+        allow update: if isValidChar(incoming());
+      }
+
+      match /chapters/{chapterId} {
+        function isValidChapter(data) {
+          return data.title is string && data.title.size() > 0 && data.title.size() <= 200
+            && (data.content is string && data.content.size() <= 100000)
+            && data.order is int
+            && (data.get('partId', '') is string);
+        }
+
+        allow read, write: if isSignedIn() && isOwner(get(/databases/$(database)/documents/novels/$(novelId)).data.authorId);
+        
+        allow create: if isValidChapter(incoming()) && isValidId(chapterId)
+          && incoming().createdAt == request.time;
+        allow update: if isValidChapter(incoming())
+          && incoming().createdAt == existing().createdAt
+          && incoming().updatedAt == request.time;
+      }
+    }
+  }
+}

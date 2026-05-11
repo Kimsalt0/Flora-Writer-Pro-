@@ -1,0 +1,140 @@
+{
+  "entities": {
+    "Novel": {
+      "title": "Novel",
+      "description": "A book project containing all writing elements.",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "authorId": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" },
+        "universe": { "type": "string" },
+        "notes": { "type": "string" },
+        "description": { "type": "string" },
+        "coverColor": { "type": "string" },
+        "coverEmoji": { "type": "string" },
+        "coverImageUrl": { "type": "string" }
+      },
+      "required": ["title", "authorId"]
+    },
+    "Idea": {
+      "title": "Idea",
+      "description": "A specific idea for the story.",
+      "type": "object",
+      "properties": {
+        "content": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      }
+    },
+    "Plot": {
+      "title": "Plot",
+      "description": "A specific plot point or arc.",
+      "type": "object",
+      "properties": {
+        "content": { "type": "string" },
+        "type": { "type": "string", "enum": ["default", "character", "event", "note"] },
+        "position": {
+          "type": "object",
+          "properties": {
+            "x": { "type": "number" },
+            "y": { "type": "number" }
+          }
+        },
+        "connectedTo": { "type": "array", "items": { "type": "string" } },
+        "createdAt": { "type": "string", "format": "date-time" }
+      }
+    },
+    "Character": {
+      "title": "Character",
+      "description": "A character in the story.",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "firstName": { "type": "string" },
+        "lastName": { "type": "string" },
+        "nickname": { "type": "string" },
+        "age": { "type": "string" },
+        "educationLevel": { "type": "string" },
+        "profession": { "type": "string" },
+        "hobbies": { "type": "string" },
+        "personality": { "type": "string" },
+        "physical": { "type": "string" },
+        "firstAppearance": { "type": "string" },
+        "situation": { "type": "string" },
+        "description": { "type": "string" },
+        "profileImageUrl": { "type": "string" },
+        "galleryImageUrls": { "type": "array", "items": { "type": "string" } },
+        "role": { "type": "string", "enum": ["Main", "Secondary", "Minor"] },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["name"]
+    },
+    "Location": {
+      "title": "Location",
+      "description": "A place/setting in the story.",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "description": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["name"]
+    },
+    "Chapter": {
+      "title": "Chapter",
+      "description": "A chapter in the manuscript.",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "content": { "type": "string" },
+        "order": { "type": "integer" },
+        "partId": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["title", "order"]
+    },
+    "Part": {
+      "title": "Part",
+      "description": "A major section/part of the manuscript.",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "order": { "type": "integer" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["title", "order"]
+    }
+  },
+  "firestore": {
+    "/novels/{novelId}": {
+      "schema": "Novel",
+      "description": "Main collection for novel projects."
+    },
+    "/novels/{novelId}/ideas/{ideaId}": {
+      "schema": "Idea",
+      "description": "Ideas subcollection."
+    },
+    "/novels/{novelId}/plots/{plotId}": {
+      "schema": "Plot",
+      "description": "Plots subcollection."
+    },
+    "/novels/{novelId}/characters/{charId}": {
+      "schema": "Character",
+      "description": "Characters subcollection."
+    },
+    "/novels/{novelId}/locations/{locId}": {
+      "schema": "Location",
+      "description": "Locations subcollection."
+    },
+    "/novels/{novelId}/parts/{partId}": {
+      "schema": "Part",
+      "description": "Parts subcollection."
+    },
+    "/novels/{novelId}/chapters/{chapterId}": {
+      "schema": "Chapter",
+      "description": "Chapters subcollection."
+    }
+  }
+}
