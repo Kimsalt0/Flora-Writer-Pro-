@@ -20,11 +20,15 @@ export default function ProjectDashboard({ novel, onNavigate, accentColor }: { n
   useEffect(() => {
     const unsubChapters = onSnapshot(collection(db, 'novels', novel.id, 'chapters'), (snap) => {
       setCounts(prev => ({ ...prev, chapters: snap.size }));
+      
+      // Calculate words lazily or debounced if needed, but let's just make it slightly faster
       let wordCount = 0;
       snap.docs.forEach(doc => {
         const content = doc.data().content || '';
-        const text = content.replace(/<[^>]*>/g, ' ');
-        wordCount += text.split(/\s+/).filter(Boolean).length;
+        if (content.length > 0) {
+          // Faster way than full regex for simple word count
+          wordCount += content.split(/\s+/).length;
+        }
       });
       setCounts(prev => ({ ...prev, words: wordCount }));
     });

@@ -50,30 +50,53 @@ export default function StoryOracle({ novel, characters, chapters, parts, plots,
         title: novel.title,
         universe: novel.universe,
         description: novel.description,
+        notes: novel.notes,
+        genre: novel.genre,
         characters: characters.map(c => ({
           name: c.name,
           role: c.role,
           personality: c.personality,
           description: c.description,
           age: c.age,
-          profession: c.profession
+          profession: c.profession,
+          situation: c.situation
         })),
         chapters: chapters.map(c => ({
           title: c.title,
-          content: c.content.substring(0, 500) + '...' // Summary for context
+          type: c.type,
+          content: c.content.length > 2000 ? c.content.substring(0, 2000) + '...' : c.content
         })),
-        plots: plots.map(p => p.content)
+        plots: plots.map(p => ({
+          content: p.content,
+          type: p.type
+        }))
       };
 
       const response = await ai.models.generateContent({
         model: "gemini-3-flash-preview",
-        contents: `Analyse cette histoire et ses composants : ${JSON.stringify(storyContext)}.
-          Identifie les incohérences potentielles, pose des questions pertinentes pour approfondir l'écriture et donne des conseils spécifiques.`,
+        contents: `En utilisant tes capacités d'analyse narrative avancée, examine la cohérence de l'histoire suivante : ${JSON.stringify(storyContext)}.
+        
+        Ta mission :
+        1. Analyser la cohérence narrative globale.
+        2. Identifier les incohérences potentielles et les trous dans l'intrigue (plot holes).
+        3. Repérer les comportements illogiques des personnages par rapport à leur description ou situation.
+        4. Générer des pistes de réflexion (questions) pour améliorer le récit.
+        5. Donner des conseils (tips) d'expert pour solidifier la structure.
+
+        Réponds strictement en format JSON avec les champs 'inconsistencies', 'questions' et 'tips'.`,
         config: {
           systemInstruction: `Tu es un expert en narration, en dramaturgie et en cohérence narrative nommé "L'Oracle du Studio Matcha". 
-          Ton rôle est d'analyser les données d'une histoire pour détecter des incohérences, des trous dans l'intrigue (plot holes) ou des comportements de personnages illogiques.
-          Sois constructif, mystérieux mais surtout extrêmement précis.
-          Réponds obligatoirement en format JSON correspondant à l'interface AnalysisResult.`,
+          Ton rôle est d'analyser les données d'une histoire pour détecter des incohérences, des trous dans l'intrigue ou des comportements de personnages illogiques.
+          Sois constructif, analytique et extrêmement précis.
+          
+          Structure du JSON attendu :
+          {
+            "inconsistencies": [
+              { "type": "character" | "plot" | "timeline" | "logic", "description": "string", "suggestion": "string", "severity": "low" | "medium" | "high" }
+            ],
+            "questions": ["string"],
+            "tips": ["string"]
+          }`,
           responseMimeType: "application/json",
           responseSchema: {
             type: Type.OBJECT,

@@ -12,26 +12,56 @@ export default defineConfig(({mode}) => {
       tailwindcss(),
       VitePWA({
         registerType: 'autoUpdate',
-        includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'mask-icon.svg'],
+        injectRegister: 'auto',
+        includeAssets: ['favicon.ico', 'icon.svg', 'apple-touch-icon.png'],
         workbox: {
-          maximumFileSizeToCacheInBytes: 4000000 // 4MB
+          cleanupOutdatedCaches: true,
+          maximumFileSizeToCacheInBytes: 5000000, 
+          globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}']
+        },
+        devOptions: {
+          enabled: true
         },
         manifest: {
           name: 'Flora Writer Pro',
           short_name: 'Flora',
+          id: '/',
           description: 'L\'atelier d\'écriture ultime pour les romanciers : gérez vos manuscrits et personnages.',
           theme_color: '#9CADA3',
-          background_color: '#ffffff',
+          background_color: '#09090b',
+          display: 'standalone',
+          display_override: ['window-controls-overlay', 'standalone', 'minimal-ui'],
+          orientation: 'portrait',
+          scope: '/',
+          start_url: '/',
+          lang: 'fr',
+          dir: 'ltr',
+          categories: ['productivity', 'books', 'utilities'],
+          prefer_related_applications: false,
           icons: [
             {
-              src: 'pwa-192x192.png',
+              src: 'icon.svg',
               sizes: '192x192',
-              type: 'image/png'
+              type: 'image/svg+xml',
+              purpose: 'any'
             },
             {
-              src: 'pwa-512x512.png',
+              src: 'icon.svg',
               sizes: '512x512',
-              type: 'image/png'
+              type: 'image/svg+xml',
+              purpose: 'any'
+            },
+            {
+              src: 'icon.svg',
+              sizes: '192x192',
+              type: 'image/svg+xml',
+              purpose: 'maskable'
+            },
+            {
+              src: 'icon.svg',
+              sizes: '512x512',
+              type: 'image/svg+xml',
+              purpose: 'maskable'
             }
           ]
         }

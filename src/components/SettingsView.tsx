@@ -25,13 +25,13 @@ export default function SettingsView({ novel }: { novel: Novel }) {
   const [title, setTitle] = useState(novel.title);
   const [type, setType] = useState(novel.type || 'Roman');
   const [emoji, setEmoji] = useState(novel.coverEmoji || '📖');
-  const [color, setColor] = useState(novel.coverColor || 'bg-sage-300');
   const [image, setImage] = useState(novel.coverImageUrl || '');
   const [pin, setPin] = useState(novel.pinCode || '');
   const [isSaving, setIsSaving] = useState(false);
   const [showAllEmojis, setShowAllEmojis] = useState(false);
-  const [showExtendedColors, setShowExtendedColors] = useState(false);
-  const [customHex, setCustomHex] = useState(color.startsWith('#') ? color : '');
+  const [showExtendedColors, setShowExtendedColors] = useState(true);
+  const [customHex, setCustomHex] = useState(novel.coverColor?.startsWith('#') ? novel.coverColor : '');
+  const [color, setColor] = useState(novel.coverColor?.startsWith('bg-') ? novel.coverColor : '');
 
   const saveSettings = async () => {
     if (!title.trim()) return;
@@ -208,44 +208,23 @@ export default function SettingsView({ novel }: { novel: Novel }) {
                   </div>
                 </div>
                 
-                <div className="flex flex-wrap gap-2.5">
-                  {BASE_COLORS.map(c => (
-                    <button
-                      key={c}
-                      onClick={() => { setColor(c); setCustomHex(''); }}
-                      className={`h-9 w-9 rounded-full ${c} border-2 transition-all ${color === c ? 'border-white scale-110 shadow-[0_0_20px_rgba(255,255,255,0.2)]' : 'border-transparent hover:scale-110 opacity-70 hover:opacity-100'}`}
-                    />
-                  ))}
-                  <button 
-                    onClick={() => setShowExtendedColors(!showExtendedColors)}
-                    className={`h-9 w-9 rounded-full border-2 border-dashed flex items-center justify-center transition-all ${showExtendedColors ? 'bg-sage-300 border-white text-white rotate-45' : 'border-zinc-800 text-zinc-600 hover:text-zinc-400'}`}
-                  >
-                    <Plus className="h-4 w-4" />
-                  </button>
-                </div>
-
-                {showExtendedColors && (
-                  <motion.div 
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="grid grid-cols-2 sm:grid-cols-5 gap-3 p-6 rounded-[2rem] bg-black/40 border border-white/5"
-                  >
-                    {EXTENDED_PALETTES.map(palette => (
-                      <div key={palette.name} className="space-y-2">
-                         <div className="flex flex-wrap gap-1">
-                          {palette.colors.slice(3, 8).map(c => (
-                            <button
-                              key={c}
-                              onClick={() => { setCustomHex(c); setColor(''); }}
-                              style={{ backgroundColor: c }}
-                              className={`h-4 w-4 rounded-sm border transition-all ${customHex === c ? 'border-white scale-110' : 'border-transparent hover:scale-110'}`}
-                            />
-                          ))}
-                        </div>
+                <div className="flex flex-col gap-6">
+                  {EXTENDED_PALETTES.map(palette => (
+                    <div key={palette.name} className="space-y-2">
+                       <p className="text-[7px] font-black text-zinc-500 uppercase tracking-widest">{palette.name}</p>
+                       <div className="flex flex-wrap gap-1.5">
+                        {palette.colors.map(c => (
+                          <button
+                            key={c}
+                            onClick={() => { setCustomHex(c); setColor(''); }}
+                            style={{ backgroundColor: c }}
+                            className={`h-5 w-5 md:h-6 md:w-6 rounded-md border transition-all ${customHex === c ? 'border-zinc-900 dark:border-white scale-125 shadow-lg' : 'border-black/5 hover:scale-110'}`}
+                          />
+                        ))}
                       </div>
-                    ))}
-                  </motion.div>
-                )}
+                    </div>
+                  ))}
+                </div>
               </div>
 
               {/* Emoji Selection */}

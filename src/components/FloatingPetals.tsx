@@ -3,7 +3,7 @@ import { motion } from 'motion/react';
 import { Flower2 } from 'lucide-react';
 
 export const FloatingPetals = () => {
-  const petals = Array.from({ length: 25 });
+  const petals = Array.from({ length: 12 });
   
   // New color palette from user image
   const colors = [

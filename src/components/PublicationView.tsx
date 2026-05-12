@@ -749,11 +749,10 @@ export default function PublicationView({ novel, parts, chapters, onNavigate, th
                           className={`w-full aspect-[2/3] rounded-3xl shadow-2xl overflow-hidden relative border transition-colors ${theme === 'dark' ? 'bg-zinc-900 border-white/10' : 'bg-white border-zinc-100'}`}
                         >
                           <div 
-                            className="absolute inset-0 p-8 flex flex-col items-center justify-center text-center transition-all duration-500"
+                            className={`absolute inset-0 p-8 flex flex-col items-center justify-center text-center transition-all duration-500 ${(!novel.coverColor || novel.coverColor.startsWith('bg-')) ? (novel.coverColor || 'bg-sage-300') : ''}`}
                             style={{ 
-                              background: theme === 'dark' 
-                                ? `linear-gradient(135deg, #18181b 0%, #000000 100%)` 
-                                : `linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)` 
+                              backgroundColor: novel.coverColor && novel.coverColor.startsWith('#') ? novel.coverColor : undefined,
+                              background: !novel.coverColor || novel.coverColor.startsWith('bg-') ? undefined : undefined
                             }}
                           >
                             <div 
@@ -1066,7 +1065,10 @@ export default function PublicationView({ novel, parts, chapters, onNavigate, th
                     {currentPage === 'cover-front' && (
                       <div className={`flex-1 flex flex-col items-center justify-between py-16 px-8 relative z-10 text-center overflow-hidden transition-all duration-700 ${
                         pubSettings.layoutMode === 'analog' ? 'rounded-r-3xl shadow-2xl' : ''
-                      } ${theme === 'dark' ? 'bg-zinc-900 shadow-inner shadow-black/40' : 'bg-transparent'}`} style={{ backgroundColor: pubSettings.layoutMode === 'analog' ? (theme === 'dark' ? '#09090b' : undefined) : 'transparent' }}>
+                      } ${(!novel.coverColor || novel.coverColor.startsWith('bg-')) ? (novel.coverColor || 'bg-sage-300') : ''} ${theme === 'dark' ? 'shadow-inner shadow-black/40' : ''}`} 
+                      style={{ 
+                        backgroundColor: novel.coverColor && novel.coverColor.startsWith('#') ? novel.coverColor : (pubSettings.layoutMode === 'analog' && theme === 'dark' ? '#09090b' : undefined) 
+                      }}>
                         {pubSettings.layoutMode === 'analog' && (
                           <div className="absolute left-0 top-0 bottom-0 w-8 bg-black/10 z-20" /> /* Spine edge shadow */
                         )}
@@ -1130,7 +1132,10 @@ export default function PublicationView({ novel, parts, chapters, onNavigate, th
                     {currentPage === 'cover-back' && (
                        <div className={`flex-1 flex flex-col items-center justify-center py-16 px-12 relative z-10 text-center overflow-hidden transition-all duration-700 ${
                          pubSettings.layoutMode === 'analog' ? 'shadow-2xl rounded-l-3xl' : ''
-                       } ${theme === 'dark' ? 'bg-zinc-900 shadow-inner shadow-black/40' : 'bg-transparent'}`} style={{ backgroundColor: pubSettings.layoutMode === 'analog' ? (theme === 'dark' ? '#09090b' : undefined) : 'transparent' }}>
+                       } ${(!novel.coverColor || novel.coverColor.startsWith('bg-')) ? (novel.coverColor || 'bg-sage-300') : ''} ${theme === 'dark' ? 'shadow-inner shadow-black/40' : ''}`} 
+                       style={{ 
+                         backgroundColor: novel.coverColor && novel.coverColor.startsWith('#') ? novel.coverColor : (pubSettings.layoutMode === 'analog' && theme === 'dark' ? '#09090b' : undefined)
+                       }}>
                         {pubSettings.layoutMode === 'analog' && (
                           <div className="absolute right-0 top-0 bottom-0 w-8 bg-black/10 z-20" /> /* Edge shadow */
                         )}
@@ -1300,7 +1305,7 @@ export default function PublicationView({ novel, parts, chapters, onNavigate, th
                         </div>
 
                         <div 
-                          className={`chapter-content selection:bg-emerald-100 flex-1 ${pubSettings.dropCap ? 'drop-cap-enabled' : ''}`}
+                          className={`chapter-content selection:bg-emerald-100 flex-1 pt-16 ${pubSettings.dropCap ? 'drop-cap-enabled' : ''}`}
                           style={{
                             fontFamily: FONTS.find(f => f.value === pubSettings.fontFamily)?.family || 'serif',
                             fontSize: `${pubSettings.fontSize}px`,

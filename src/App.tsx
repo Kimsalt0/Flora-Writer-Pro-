@@ -16,23 +16,26 @@ import {
 } from 'firebase/firestore';
 import { auth, db, loginWithGoogle, logout, handleFirestoreError, OperationType } from './firebase';
 import { Novel, ViewType, Part, Chapter, Character, Plot } from './types';
-import ProjectDashboard from './components/ProjectDashboard';
-import ManuscriptEditor from './components/ManuscriptEditor';
-import WritingStatsDetails from './components/WritingStatsDetails';
-import CharacterList from './components/CharacterList';
-import SimpleTextEditor from './components/SimpleTextEditor';
-import IdeasView from './components/IdeasView';
-import StoryMap from './components/StoryMap';
-import SubcollectionList from './components/SubcollectionList';
-import SettingsView from './components/SettingsView';
-import PublicationView from './components/PublicationView';
-import StoryOracle from './components/StoryOracle';
+const ProjectDashboard = React.lazy(() => import('./components/ProjectDashboard'));
+const ManuscriptEditor = React.lazy(() => import('./components/ManuscriptEditor'));
+const WritingStatsDetails = React.lazy(() => import('./components/WritingStatsDetails'));
+const CharacterList = React.lazy(() => import('./components/CharacterList'));
+const SimpleTextEditor = React.lazy(() => import('./components/SimpleTextEditor'));
+const IdeasView = React.lazy(() => import('./components/IdeasView'));
+const StoryMap = React.lazy(() => import('./components/StoryMap'));
+const SubcollectionList = React.lazy(() => import('./components/SubcollectionList'));
+const SettingsView = React.lazy(() => import('./components/SettingsView'));
+const PublicationView = React.lazy(() => import('./components/PublicationView'));
+const StoryOracle = React.lazy(() => import('./components/StoryOracle'));
+const StructuresView = React.lazy(() => import('./components/StructuresView'));
+import InstallPWA from './components/InstallPWA';
 import { 
   Book, 
   Library, 
   LogOut, 
   Plus, 
   Map,
+  Download,
   LayoutDashboard, 
   Brain, 
   BrainCircuit,
@@ -95,6 +98,7 @@ export default function App() {
   const [homeBackground, setHomeBackground] = useState<'default' | 'minimal' | 'warm' | 'custom'>(() => (localStorage.getItem('homeBackground') as any) || 'warm');
   const [homeBgCustomUrl, setHomeBgCustomUrl] = useState(() => localStorage.getItem('homeBgCustomUrl') || '');
   const [projectDisplay, setProjectDisplay] = useState<'grid' | 'compact'>(() => (localStorage.getItem('projectDisplay') as any) || 'grid');
+  const [showInstallPWA, setShowInstallPWA] = useState(false);
 
   // Sync theme with system
   useEffect(() => {
@@ -315,16 +319,10 @@ export default function App() {
     const title = prompt(`Titre de votre ${type} :`);
     if (!title) return;
 
-    const colors = [
-      'bg-sage-300', 
-      'bg-orange-300', 
-      'bg-rose-300', 
-      'bg-indigo-300', 
-      'bg-emerald-400',
-      'bg-amber-400',
-      'bg-sky-400',
-      'bg-purple-400'
-    ];
+    // Use a random color from the extended palettes as requested
+    const allExtendedColors = EXTENDED_PALETTES.flatMap(p => p.colors);
+    const randomColor = allExtendedColors[Math.floor(Math.random() * allExtendedColors.length)];
+
     const emojis = ['📖', '🎨', '🎬', '✨', '🪐', '🌿', '🐉', '⚔️', '🐚', '🌙', '🎻', '☕', '🔆', '💛', '💙', '🍁', '🪷', '🍂', '💸'];
     
     try {
@@ -336,7 +334,7 @@ export default function App() {
         updatedAt: serverTimestamp(),
         universe: '',
         notes: '',
-        coverColor: colors[Math.floor(Math.random() * colors.length)],
+        coverColor: randomColor,
         coverEmoji: emojis[Math.floor(Math.random() * emojis.length)]
       });
       setShowFormatSelector(false);
@@ -832,7 +830,10 @@ export default function App() {
                       onClick={() => openNovel(novel)}
                       className="relative h-full w-full rounded-r-[1rem] rounded-l-[0.2rem] bg-zinc-900 overflow-hidden shadow-[10px_20px_40px_rgba(0,0,0,0.3)] transition-transform duration-500 group-hover:rotate-y-[-15deg] group-hover:scale-105"
                     >
-                      <div className={`absolute inset-0 ${novel.coverColor || 'bg-sage-300'} border-y border-r border-white/10`} />
+                      <div 
+                        className={`absolute inset-0 ${(!novel.coverColor || novel.coverColor.startsWith('bg-')) ? (novel.coverColor || 'bg-sage-300') : ''} border-y border-r border-white/10`} 
+                        style={novel.coverColor && novel.coverColor.startsWith('#') ? { backgroundColor: novel.coverColor } : {}}
+                      />
                       
                       {novel.coverImageUrl && (
                         <img 
@@ -926,12 +927,25 @@ export default function App() {
           </AnimatePresence>
         </div>
 
-        <button 
-          onClick={() => setShowMainSettings(true)}
-          className="fixed bottom-10 right-10 p-5 bg-white dark:bg-zinc-800 rounded-full shadow-2xl border border-zinc-100 dark:border-white/10 hover:scale-110 active:scale-95 transition-all text-zinc-500 hover:text-sage-300 z-[60]"
-        >
-          <Settings className="h-6 w-6" />
-        </button>
+        <div className="fixed bottom-10 right-10 flex flex-col gap-4 z-[60]">
+          <button 
+            onClick={() => setShowMainSettings(true)}
+            className="p-5 bg-white dark:bg-zinc-800 rounded-full shadow-2xl border border-zinc-100 dark:border-white/10 hover:scale-110 active:scale-95 transition-all text-zinc-500 hover:text-sage-300"
+            title="Personnaliser l'accueil"
+          >
+            <Settings className="h-6 w-6" />
+          </button>
+
+          <button 
+            onClick={() => setShowInstallPWA(true)}
+            className="p-5 bg-emerald-500 rounded-full shadow-2xl border border-emerald-400 hover:scale-110 active:scale-95 transition-all text-white"
+            title="Télécharger l'application"
+          >
+            <Download className="h-6 w-6" />
+          </button>
+        </div>
+
+        <InstallPWA manualTrigger={showInstallPWA} onManualClose={() => setShowInstallPWA(false)} />
       </div>
     );
   }
@@ -1159,22 +1173,29 @@ export default function App() {
               transition={{ duration: 0.3, ease: 'circOut' }}
               className={`${(activeView === 'organigramme' || activeView === 'manuscrit' || activeView === 'publication' || activeView === 'perso_principaux' || activeView === 'perso_secondaires') ? 'max-w-none w-full' : 'max-w-7xl mx-auto'} h-full`}
             >
-              <WorkspaceView 
-                novel={selectedNovel} 
-                view={activeView} 
-                onNavigate={setActiveView} 
-                theme={theme} 
-                accentColor={accentColor}
-                user={user}
-                parts={parts}
-                chapters={chapters}
-                characters={characters}
-                plots={plots}
-              />
+              <React.Suspense fallback={
+                <div className="flex items-center justify-center h-full">
+                  <div className="w-12 h-12 border-4 border-emerald-500/20 border-t-emerald-500 rounded-full animate-spin" />
+                </div>
+              }>
+                <WorkspaceView 
+                  novel={selectedNovel} 
+                  view={activeView} 
+                  onNavigate={setActiveView} 
+                  theme={theme} 
+                  accentColor={accentColor}
+                  user={user}
+                  parts={parts}
+                  chapters={chapters}
+                  characters={characters}
+                  plots={plots}
+                />
+              </React.Suspense>
             </motion.div>
           </AnimatePresence>
         </div>
       </main>
+      <InstallPWA manualTrigger={showInstallPWA} onManualClose={() => setShowInstallPWA(false)} />
     </div>
   );
 }
@@ -1288,6 +1309,8 @@ function WorkspaceView({
         plots={plots}
         accentColor={accentColor}
       />;
+    case 'structure':
+      return <StructuresView novel={novel} />;
     default:
       return <ProjectDashboard novel={novel} onNavigate={onNavigate} accentColor={accentColor} />;
   }
@@ -1541,13 +1564,13 @@ function EditNovelModal({ novel, onClose, onDuplicate }: { novel: Novel, onClose
   const [title, setTitle] = useState(novel.title);
   const [description, setDescription] = useState(novel.description || '');
   const [emoji, setEmoji] = useState(novel.coverEmoji || '📖');
-  const [color, setColor] = useState(novel.coverColor || 'bg-sage-300');
   const [image, setImage] = useState(novel.coverImageUrl || '');
   const [pin, setPin] = useState(novel.pinCode || '');
   const [saving, setSaving] = useState(false);
   const [showAllEmojis, setShowAllEmojis] = useState(false);
-  const [showExtendedColors, setShowExtendedColors] = useState(false);
-  const [customHex, setCustomHex] = useState(color.startsWith('#') ? color : '');
+  const [showExtendedColors, setShowExtendedColors] = useState(true); // Default to true as user requested these colors
+  const [customHex, setCustomHex] = useState(novel.coverColor?.startsWith('#') ? novel.coverColor : '');
+  const [color, setColor] = useState(novel.coverColor?.startsWith('bg-') ? novel.coverColor : '');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -1680,45 +1703,23 @@ function EditNovelModal({ novel, onClose, onDuplicate }: { novel: Novel, onClose
                     />
                   </div>
                 </div>
-                <div className="flex flex-wrap gap-2">
-                  {BASE_COLORS.map(c => (
-                    <button
-                      key={c}
-                      onClick={() => { setColor(c); setCustomHex(''); }}
-                      className={`h-8 w-8 rounded-full ${c} border-2 transition-all ${color === c ? 'border-zinc-900 dark:border-white scale-110 shadow-md' : 'border-white/5 hover:scale-110'}`}
-                    />
-                  ))}
-                  <button 
-                    onClick={() => setShowExtendedColors(!showExtendedColors)}
-                    className={`h-8 w-8 rounded-full border-2 border-dashed flex items-center justify-center text-xs font-bold transition-all ${showExtendedColors ? 'bg-sage-300 border-sage-400 text-white shadow-lg rotate-45' : 'border-zinc-300 dark:border-white/20 text-zinc-400 hover:border-zinc-500'}`}
-                  >
-                    <Plus className="h-4 w-4" />
-                  </button>
-                </div>
-
-                {showExtendedColors && (
-                  <motion.div 
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: 'auto' }}
-                    className="space-y-4 p-4 rounded-3xl bg-zinc-50 dark:bg-zinc-800/40 border border-zinc-100 dark:border-white/5"
-                  >
-                    {EXTENDED_PALETTES.map(palette => (
-                      <div key={palette.name} className="space-y-2">
-                        <p className="text-[7px] font-black uppercase tracking-[0.2em] text-zinc-400">{palette.name}</p>
-                        <div className="flex flex-wrap gap-1.5">
-                          {palette.colors.map(c => (
-                            <button
-                              key={c}
-                              onClick={() => { setCustomHex(c); setColor(''); }}
-                              style={{ backgroundColor: c }}
-                              className={`h-5 w-5 rounded-md border transition-all ${customHex === c ? 'border-zinc-900 dark:border-white scale-110' : 'border-black/5 hover:scale-110'}`}
-                            />
-                          ))}
-                        </div>
+                <div className="flex flex-col gap-4">
+                  {EXTENDED_PALETTES.map(palette => (
+                    <div key={palette.name} className="space-y-2">
+                      <p className="text-[7px] font-black uppercase tracking-[0.2em] text-zinc-400">{palette.name}</p>
+                      <div className="flex flex-wrap gap-1.5">
+                        {palette.colors.map(c => (
+                          <button
+                            key={c}
+                            onClick={() => { setCustomHex(c); setColor(''); }}
+                            style={{ backgroundColor: c }}
+                            className={`h-5 w-5 md:h-6 md:w-6 rounded-md border transition-all ${customHex === c ? 'border-zinc-900 dark:border-white scale-125 shadow-lg' : 'border-black/5 hover:scale-110'}`}
+                          />
+                        ))}
                       </div>
-                    ))}
-                  </motion.div>
-                )}
+                    </div>
+                  ))}
+                </div>
               </div>
 
               <div className="space-y-4">
